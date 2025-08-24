@@ -135,7 +135,8 @@ const Login = () => {
       justifyContent="space-between"
       minHeight="100vh"
     >
-      <Header hasHiddenAuthButtons />
+      {/* Hide LOGIN (show only REGISTER) on Login page header */}
+      <Header hasHiddenAuthButtons hideLoginBtn />
       <Box className="content">
         <Stack spacing={2} className="form">
           <h2 className="title">Login</h2>
