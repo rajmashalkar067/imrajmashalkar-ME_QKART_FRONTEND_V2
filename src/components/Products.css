@@ -1,9 +1,13 @@
+/* Keep original rules intact (you asked not to remove comments) */
+
+/* old search helper - not used but kept for reference */
 .search {
   min-width: 24rem;
   position: relative;
   left: 4rem;
 }
 
+/* hero */
 .hero {
   background-image: url("../assets/hero_image.png");
   background-position: center;
@@ -13,10 +17,16 @@
   display: flex;
   justify-content: center;
   align-items: center;
+
+  /* ensure hero uses same inner gutter as rest of page */
+  box-sizing: border-box;
+  padding-left: 24px;
+  padding-right: 24px;
 }
 
 .product-grid {
   width: 100%;
+  box-sizing: border-box;
 }
 
 .hero-heading {
@@ -44,19 +54,40 @@
   height: 50vh;
 }
 
+/* mobile/desktop search toggles (kept for compatibility) */
 .search-mobile {
   display: block !important;
 }
-
 .search-desktop {
   display: none !important;
 }
 
+/* Styling for search bar - centered, narrow on desktop, full on mobile */
+.products-search-field {
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Wrapper that contains products grid: this ensures exact alignment between search and grid */
+/* NOTE: add left/right padding (same as header) so header and page content align exactly */
+.products-page-wrapper {
+  max-width: 1200px; /* central container width used across the page */
+  margin: 1rem auto;
+  padding-left: 24px;   /* <--- important: matches header gutter */
+  padding-right: 24px;  /* <--- important: matches header gutter */
+  box-sizing: border-box;
+}
+
+/* On larger screens increase hero height and show desktop search */
 @media screen and (min-width: 768px) {
   .hero {
     justify-content: flex-end;
     height: 20rem;
-    padding-right: 8rem;
+    /* keep the hero's right internal spacing but don't over-shift overall layout */
+    padding-right: 24px;
   }
   .hero-heading {
     position: static;
@@ -68,5 +99,18 @@
   }
   .search-desktop {
     display: block !important;
+  }
+  /* limit desktop search width for a more compact look */
+  .products-search-field {
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* On very large screens avoid huge left-right whitespace by keeping the same max-width */
+@media screen and (min-width: 1400px) {
+  .products-page-wrapper {
+    max-width: 1200px;
   }
 }
