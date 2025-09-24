@@ -10,179 +10,96 @@ import React from "react";
 import { useHistory } from "react-router-dom";
 import "./Cart.css";
 
-<<<<<<< ours
 /**
  * Returns the complete data on all products in cartData by searching in productsData
+ *
+ * cartData: [{ productId: string, qty: number }, ...]
+ * productsData: [{ _id: string, name, category, cost, rating, image }, ...]
+ *
+ * returns: [{ ...productData, productId, qty }, ...]
  */
 export const generateCartItemsFrom = (cartData = [], productsData = []) => {
-  return cartData.map((entry) => {
-    const product = productsData.find((p) => p._id === entry.productId);
-    if (!product) return null;
-    return {
-      ...product,
-      productId: entry.productId,
-      qty: entry.qty,
-    };
-  }).filter(Boolean);
-=======
-// Definition of Data Structures used
-/**
- * @typedef {Object} Product - Data on product available to buy
- * 
- * @property {string} name - The name or title of the product
- * @property {string} category - The category that the product belongs to
- * @property {number} cost - The price to buy the product
- * @property {number} rating - The aggregate rating of the product (integer out of five)
- * @property {string} image - Contains URL for the product image
- * @property {string} _id - Unique ID for the product
- */
-
-/**
- * @typedef {Object} CartItem -  - Data on product added to cart
- * 
- * @property {string} name - The name or title of the product in cart
- * @property {string} qty - The quantity of product added to cart
- * @property {string} category - The category that the product belongs to
- * @property {number} cost - The price to buy the product
- * @property {number} rating - The aggregate rating of the product (integer out of five)
- * @property {string} image - Contains URL for the product image
- * @property {string} productId - Unique ID for the product
- */
-
-/**
- * Returns the complete data on all products in cartData by searching in productsData
- *
- * @param { Array.<{ productId: String, qty: Number }> } cartData
- *    Array of objects with productId and quantity of products in cart
- * 
- * @param { Array.<Product> } productsData
- *    Array of objects with complete data on all available products
- *
- * @returns { Array.<CartItem> }
- *    Array of objects with complete data on products in cart
- *
- */
-export const generateCartItemsFrom = (cartData, productsData) => {
->>>>>>> theirs
+  return (cartData || [])
+    .map((entry) => {
+      const product = (productsData || []).find((p) => p._id === entry.productId);
+      if (!product) return null;
+      return {
+        ...product,
+        productId: entry.productId,
+        qty: entry.qty,
+      };
+    })
+    .filter(Boolean);
 };
 
 /**
  * Get the total value of all products added to the cart
-<<<<<<< ours
+ *
+ * items: [{ cost: number, qty: number, ... }, ...]
  */
 export const getTotalCartValue = (items = []) => {
-  return items.reduce((total, item) => total + item.cost * item.qty, 0);
+  return (items || []).reduce((total, item) => total + (item.cost || 0) * (item.qty || 0), 0);
 };
 
 /**
- * Quantity control
- */
-const ItemQuantity = ({ value, handleAdd, handleDelete }) => (
-  <Stack direction="row" alignItems="center">
-    <IconButton size="small" color="primary" onClick={handleDelete}>
-      <RemoveOutlined data-testid="RemoveOutlinedIcon" />
-    </IconButton>
-    <Box padding="0.5rem" data-testid="item-qty">
-      {value}
-    </Box>
-    <IconButton size="small" color="primary" onClick={handleAdd}>
-      <AddOutlined data-testid="AddOutlinedIcon" />
-    </IconButton>
-  </Stack>
-);
-
-/**
- * Cart component
- */
-const Cart = ({ products = [], items = [], handleQuantity }) => {
-  const history = useHistory();
-=======
+ * Get total number of items (sum of qty) in cart
  *
- * @param { Array.<CartItem> } items
- *    Array of objects with complete data on products added to the cart
- *
- * @returns { Number }
- *    Value of all items in the cart
- *
- */
-export const getTotalCartValue = (items = []) => {
-};
-
-// TODO: CRIO_TASK_MODULE_CHECKOUT - Implement function to return total cart quantity
-/**
- * Return the sum of quantities of all products added to the cart
- *
- * @param { Array.<CartItem> } items
- *    Array of objects with complete data on products in cart
- *
- * @returns { Number }
- *    Total quantity of products added to the cart
- *
+ * items: [{ qty: number }, ...]
  */
 export const getTotalItems = (items = []) => {
+  return (items || []).reduce((sum, it) => sum + (it.qty || 0), 0);
 };
 
-// TODO: CRIO_TASK_MODULE_CHECKOUT - Add static quantity view for Checkout page cart
 /**
- * Component to display the current quantity for a product and + and - buttons to update product quantity on cart
- * 
- * @param {Number} value
- *    Current quantity of product in cart
- * 
- * @param {Function} handleAdd
- *    Handler function which adds 1 more of a product to cart
- * 
- * @param {Function} handleDelete
- *    Handler function which reduces the quantity of a product in cart by 1
- * 
- * @param {Boolean} isReadOnly
- *    If product quantity on cart is to be displayed as read only without the + - options to change quantity
- * 
+ * ItemQuantity component
+ *
+ * - When isReadOnly is true: renders plain text "Qty: X" (no +/- buttons)
+ * - Otherwise renders interactive +/- icons that call handleAdd/handleDelete
+ *
+ * Keep data-testid attributes so tests can find the icons / qty element.
  */
-const ItemQuantity = ({
-  value,
-  handleAdd,
-  handleDelete,
-}) => {
+const ItemQuantity = ({ value, handleAdd, handleDelete, isReadOnly = false }) => {
+  if (isReadOnly) {
+    // Readonly display (used on Checkout page)
+    return (
+      <Box padding="0.5rem" data-testid="item-qty">
+        Qty: {value}
+      </Box>
+    );
+  }
+
+  // Interactive quantity control (used on Products page/cart widget)
   return (
     <Stack direction="row" alignItems="center">
-      <IconButton size="small" color="primary" onClick={handleDelete}>
-        <RemoveOutlined />
+      <IconButton size="small" color="primary" onClick={handleDelete} data-testid="decrease-qty">
+        <RemoveOutlined data-testid="RemoveOutlinedIcon" />
       </IconButton>
       <Box padding="0.5rem" data-testid="item-qty">
         {value}
       </Box>
-      <IconButton size="small" color="primary" onClick={handleAdd}>
-        <AddOutlined />
+      <IconButton size="small" color="primary" onClick={handleAdd} data-testid="increase-qty">
+        <AddOutlined data-testid="AddOutlinedIcon" />
       </IconButton>
     </Stack>
   );
 };
 
 /**
- * Component to display the Cart view
- * 
- * @param { Array.<Product> } products
- *    Array of objects with complete data of all available products
- * 
- * @param { Array.<Product> } items
- *    Array of objects with complete data on products in cart
- * 
- * @param {Function} handleDelete
- *    Current quantity of product in cart
- * 
- * @param {Boolean} isReadOnly
- *    If product quantity on cart is to be displayed as read only without the + - options to change quantity
- * 
+ * Cart component
+ *
+ * Props:
+ *  - products (not required here, but kept for parity)
+ *  - items: array of cart items (each item should include productId, name, image, cost, qty)
+ *  - handleQuantity: function(productId, newQty) => updates cart; required for interactive mode
+ *  - isReadOnly (boolean) - if true, render read-only view (Checkout page) and hide Checkout button
  */
-const Cart = ({
-  products,
-  items = [],
-  handleQuantity,
-}) => {
->>>>>>> theirs
+const Cart = ({ products = [], items = [], handleQuantity, isReadOnly = false, readOnly = false }) => {
+  // Accept both isReadOnly and readOnly prop names (some stubs may use readOnly)
+  const readonlyMode = isReadOnly || readOnly;
+  const history = useHistory();
 
-  if (!items.length) {
+  // Empty cart view
+  if (!items || items.length === 0) {
     return (
       <Box className="cart empty">
         <ShoppingCartOutlined className="empty-cart-icon" />
@@ -194,39 +111,46 @@ const Cart = ({
   }
 
   return (
-<<<<<<< ours
     <Box className="cart">
+      {/* Each cart item */}
       {items.map((item) => (
-        <Box
-          key={item.productId}
-          display="flex"
-          alignItems="flex-start"
-          padding="1rem"
-        >
-          <Box className="image-container">
+        <Box key={item.productId} display="flex" alignItems="flex-start" padding="1rem">
+          <Box className="image-container" sx={{ minWidth: 100, width: 100, height: 100 }}>
             <img
               src={item.image}
               alt={item.name}
               width="100%"
               height="100%"
+              style={{ objectFit: "contain" }}
+              data-testid={`product-image-${item.productId}`}
             />
           </Box>
+
           <Box
             display="flex"
             flexDirection="column"
             justifyContent="space-between"
             height="6rem"
             paddingX="1rem"
-            flex={1}
+            flex="1"
           >
-            <div>{item.name}</div>
+            <div style={{ fontSize: "0.95rem" }} data-testid={`product-name-${item.productId}`}>
+              {item.name}
+            </div>
+
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <ItemQuantity
                 value={item.qty}
-                handleAdd={() => handleQuantity(item.productId, item.qty + 1)}
-                handleDelete={() => handleQuantity(item.productId, item.qty - 1)}
+                isReadOnly={readonlyMode}
+                handleAdd={() => {
+                  if (handleQuantity && !readonlyMode) handleQuantity(item.productId, item.qty + 1);
+                }}
+                handleDelete={() => {
+                  if (handleQuantity && !readonlyMode) handleQuantity(item.productId, item.qty - 1);
+                }}
               />
-              <Box padding="0.5rem" fontWeight="700">
+
+              <Box padding="0.5rem" fontWeight="700" data-testid={`product-cost-${item.productId}`}>
                 ${item.cost}
               </Box>
             </Box>
@@ -235,62 +159,59 @@ const Cart = ({
       ))}
 
       {/* Order total */}
-      <Box
-        padding="1rem"
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-      >
-        <Box color="#3C3C3C">Order total</Box>
+      <Box padding="1rem" display="flex" justifyContent="space-between" alignItems="center">
+        <Box color="#3C3C3C" alignSelf="center">
+          Order total
+        </Box>
         <Box
           color="#3C3C3C"
           fontWeight="700"
           fontSize="1.5rem"
+          alignSelf="center"
           data-testid="cart-total"
         >
           ${getTotalCartValue(items)}
         </Box>
       </Box>
 
-      {/* Checkout button */}
-      <Box display="flex" justifyContent="flex-end" className="cart-footer" padding="1rem">
-        <Button
-          color="primary"
-          variant="contained"
-          startIcon={<ShoppingCart />}
-          className="checkout-btn"
-          onClick={() => history.push("/checkout")}
-        >
-          Checkout
-        </Button>
-      </Box>
-    </Box>
-=======
-    <>
-      <Box className="cart">
-        <Box
-          padding="1rem"
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-        >
-          <Box color="#3C3C3C" alignSelf="center">
-            Order total
+      {/* Order Details - Only on Checkout page (readonly mode) */}
+      {readonlyMode && (
+        <Box className="order-details" padding="1rem" data-testid="order-details">
+          <h3>Order Details</h3>
+          <Box display="flex" justifyContent="space-between" paddingY="0.5rem">
+            <span>Total Items:</span>
+            <span>{getTotalItems(items)}</span>
           </Box>
-          <Box
-            color="#3C3C3C"
-            fontWeight="700"
-            fontSize="1.5rem"
-            alignSelf="center"
-            data-testid="cart-total"
-          >
-            ${getTotalCartValue(items)}
+          <Box display="flex" justifyContent="space-between" paddingY="0.5rem">
+            <span>Subtotal:</span>
+            <span>${getTotalCartValue(items)}</span>
+          </Box>
+          <Box display="flex" justifyContent="space-between" paddingY="0.5rem">
+            <span>Shipping Charges:</span>
+            <span>$0</span>
+          </Box>
+          <Box display="flex" justifyContent="space-between" paddingY="0.5rem" fontWeight="700">
+            <span>Grand Total:</span>
+            <span>${getTotalCartValue(items)}</span>
           </Box>
         </Box>
+      )}
 
-      </Box>
-    </>
->>>>>>> theirs
+      {/* Checkout button: show only for interactive cart (not on read-only Checkout page) */}
+      {!readonlyMode && (
+        <Box display="flex" justifyContent="flex-end" className="cart-footer" padding="0 1rem 1rem 1rem">
+          <Button
+            color="primary"
+            variant="contained"
+            startIcon={<ShoppingCart />}
+            className="checkout-btn"
+            onClick={() => history.push("/checkout")}
+          >
+            Checkout
+          </Button>
+        </Box>
+      )}
+    </Box>
   );
 };
 

@@ -6,8 +6,9 @@ import {
   Stack,
   TextField,
   Typography,
+  Box as MuiBox,
+  Box,
 } from "@mui/material";
-import { Box } from "@mui/system";
 import axios from "axios";
 import { useSnackbar } from "notistack";
 import React, { useEffect, useState } from "react";
@@ -18,83 +19,47 @@ import "./Checkout.css";
 import Footer from "./Footer";
 import Header from "./Header";
 
-// Definition of Data Structures used
 /**
  * @typedef {Object} Product - Data on product available to buy
- *
- * @property {string} name - The name or title of the product
- * @property {string} category - The category that the product belongs to
- * @property {number} cost - The price to buy the product
- * @property {number} rating - The aggregate rating of the product (integer out of five)
- * @property {string} image - Contains URL for the product image
- * @property {string} _id - Unique ID for the product
+ * @property {string} name
+ * @property {string} category
+ * @property {number} cost
+ * @property {number} rating
+ * @property {string} image
+ * @property {string} _id
  */
 
 /**
- * @typedef {Object} CartItem -  - Data on product added to cart
- *
- * @property {string} name - The name or title of the product in cart
- * @property {string} qty - The quantity of product added to cart
- * @property {string} category - The category that the product belongs to
- * @property {number} cost - The price to buy the product
- * @property {number} rating - The aggregate rating of the product (integer out of five)
- * @property {string} image - Contains URL for the product image
- * @property {string} productId - Unique ID for the product
- */
-
-<<<<<<< ours
-
-
-const Checkout = () => {
-
-
-
-
-
-
-
-
-=======
-/**
- * @typedef {Object} Address - Data on added address
- *
- * @property {string} _id - Unique ID for the address
- * @property {string} address - Full address string
+ * @typedef {Object} CartItem
+ * @property {string} name
+ * @property {string} qty
+ * @property {string} category
+ * @property {number} cost
+ * @property {number} rating
+ * @property {string} image
+ * @property {string} productId
  */
 
 /**
- * @typedef {Object} Addresses - Data on all added addresses
- *
- * @property {Array.<Address>} all - Data on all added addresses
- * @property {string} selected - Id of the currently selected address
+ * @typedef {Object} Address
+ * @property {string} _id
+ * @property {string} address
  */
 
 /**
- * @typedef {Object} NewAddress - Data on the new address being typed
- *
- * @property { Boolean } isAddingNewAddress - If a new address is being added
- * @property { String} value - Latest value of the address being typed
+ * @typedef {Object} Addresses
+ * @property {Array.<Address>} all
+ * @property {string} selected
  */
 
-// TODO: CRIO_TASK_MODULE_CHECKOUT - Should allow to type a new address in the text field and add the new address or cancel adding new address
 /**
- * Returns the complete data on all products in cartData by searching in productsData
- *
- * @param { String } token
- *    Login token
- *
- * @param { NewAddress } newAddress
- *    Data on new address being added
- *
- * @param { Function } handleNewAddress
- *    Handler function to set the new address field to the latest typed value
- *
- * @param { Function } addAddress
- *    Handler function to make an API call to add the new address
- *
- * @returns { JSX.Element }
- *    JSX for the Add new address view
- *
+ * @typedef {Object} NewAddress
+ * @property { Boolean } isAddingNewAddress
+ * @property { String} value
+ */
+
+/**
+ * Add new address UI
  */
 const AddNewAddressView = ({
   token,
@@ -103,20 +68,38 @@ const AddNewAddressView = ({
   addAddress,
 }) => {
   return (
-    <Box display="flex" flexDirection="column">
+    <Box display="flex" flexDirection="column" my="1rem">
       <TextField
         multiline
         minRows={4}
         placeholder="Enter your complete address"
+        value={newAddress.value}
+        onChange={(e) =>
+          handleNewAddress({
+            ...newAddress,
+            value: e.target.value,
+          })
+        }
+        data-testid="add-new-address"
       />
-      <Stack direction="row" my="1rem">
+      <Stack direction="row" my="1rem" spacing={2}>
         <Button
           variant="contained"
+          onClick={() => addAddress(token, newAddress)}
+          disabled={!newAddress.value.trim()}
+          data-testid="add-address-button"
         >
           Add
         </Button>
         <Button
           variant="text"
+          onClick={() =>
+            handleNewAddress({
+              isAddingNewAddress: false,
+              value: "",
+            })
+          }
+          data-testid="cancel-address-button"
         >
           Cancel
         </Button>
@@ -155,17 +138,18 @@ const Checkout = () => {
             variant: "error",
           }
         );
+        return null;
       }
     }
   };
 
   // Fetch cart data
-  const fetchCart = async (token) => {
-    if (!token) return;
+  const fetchCart = async (tokenParam) => {
+    if (!tokenParam) return;
     try {
       const response = await axios.get(`${config.endpoint}/cart`, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${tokenParam}`,
         },
       });
 
@@ -185,38 +169,18 @@ const Checkout = () => {
    * Fetch list of addresses for a user
    *
    * API Endpoint - "GET /user/addresses"
-   *
-   * Example for successful response from backend:
-   * HTTP 200
-   * [
-   *      {
-   *          "_id": "",
-   *          "address": "Test address\n12th street, Mumbai"
-   *      },
-   *      {
-   *          "_id": "BW0jAAeDJmlZCF8i",
-   *          "address": "New address \nKolam lane, Chennai"
-   *      }
-   * ]
-   *
-   * Example for failed response from backend:
-   * HTTP 401
-   * {
-   *      "success": false,
-   *      "message": "Protected route, Oauth2 Bearer token not found"
-   * }
    */
-  const getAddresses = async (token) => {
-    if (!token) return;
+  const getAddresses = async (tokenParam) => {
+    if (!tokenParam) return;
 
     try {
       const response = await axios.get(`${config.endpoint}/user/addresses`, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${tokenParam}`,
         },
       });
 
-      setAddresses({ ...addresses, all: response.data });
+      setAddresses((prev) => ({ ...prev, all: response.data }));
       return response.data;
     } catch {
       enqueueSnackbar(
@@ -232,43 +196,42 @@ const Checkout = () => {
   /**
    * Handler function to add a new address and display the latest list of addresses
    *
-   * @param { String } token
-   *    Login token
-   *
-   * @param { NewAddress } newAddress
-   *    Data on new address being added
-   *
-   * @returns { Array.<Address> }
-   *    Latest list of addresses
-   *
-   * API Endpoint - "POST /user/addresses"
-   *
-   * Example for successful response from backend:
-   * HTTP 200
-   * [
-   *      {
-   *          "_id": "",
-   *          "address": "Test address\n12th street, Mumbai"
-   *      },
-   *      {
-   *          "_id": "BW0jAAeDJmlZCF8i",
-   *          "address": "New address \nKolam lane, Chennai"
-   *      }
-   * ]
-   *
-   * Example for failed response from backend:
-   * HTTP 401
-   * {
-   *      "success": false,
-   *      "message": "Protected route, Oauth2 Bearer token not found"
-   * }
+   * Implemented:
+   * - POST /user/addresses with { address: <value> }
+   * - On success setAddresses using response.data (updated addresses array)
+   * - Reset newAddress to hide the Add view
    */
-  const addAddress = async (token, newAddress) => {
-    try {
-      // TODO: CRIO_TASK_MODULE_CHECKOUT - Add new address to the backend and display the latest list of addresses
+  const addAddress = async (tokenParam, newAddressObj) => {
+    if (!tokenParam) {
+      enqueueSnackbar("You must be logged in to add an address", {
+        variant: "warning",
+      });
+      return null;
+    }
+    if (!newAddressObj || !newAddressObj.value || !newAddressObj.value.trim()) {
+      enqueueSnackbar("Please enter a valid address", { variant: "warning" });
+      return null;
+    }
 
+    try {
+      const response = await axios.post(
+        `${config.endpoint}/user/addresses`,
+        { address: newAddressObj.value },
+        {
+          headers: {
+            Authorization: `Bearer ${tokenParam}`,
+          },
+        }
+      );
+
+      // response.data expected to be updated addresses array
+      setAddresses((prev) => ({ ...prev, all: response.data }));
+      // reset newAddress state and hide add view
+      setNewAddress({ isAddingNewAddress: false, value: "" });
+      enqueueSnackbar("Address added successfully", { variant: "success" });
+      return response.data;
     } catch (e) {
-      if (e.response) {
+      if (e.response && e.response.data && e.response.data.message) {
         enqueueSnackbar(e.response.data.message, { variant: "error" });
       } else {
         enqueueSnackbar(
@@ -278,49 +241,46 @@ const Checkout = () => {
           }
         );
       }
+      return null;
     }
   };
 
   /**
    * Handler function to delete an address from the backend and display the latest list of addresses
    *
-   * @param { String } token
-   *    Login token
-   *
-   * @param { String } addressId
-   *    Id value of the address to be deleted
-   *
-   * @returns { Array.<Address> }
-   *    Latest list of addresses
-   *
-   * API Endpoint - "DELETE /user/addresses/:addressId"
-   *
-   * Example for successful response from backend:
-   * HTTP 200
-   * [
-   *      {
-   *          "_id": "",
-   *          "address": "Test address\n12th street, Mumbai"
-   *      },
-   *      {
-   *          "_id": "BW0jAAeDJmlZCF8i",
-   *          "address": "New address \nKolam lane, Chennai"
-   *      }
-   * ]
-   *
-   * Example for failed response from backend:
-   * HTTP 401
-   * {
-   *      "success": false,
-   *      "message": "Protected route, Oauth2 Bearer token not found"
-   * }
+   * Implemented:
+   * - DELETE /user/addresses/:addressId
+   * - On success setAddresses using response.data (updated addresses array)
    */
-  const deleteAddress = async (token, addressId) => {
-    try {
-      // TODO: CRIO_TASK_MODULE_CHECKOUT - Delete selected address from the backend and display the latest list of addresses
+  const deleteAddress = async (tokenParam, addressId) => {
+    if (!tokenParam) {
+      enqueueSnackbar("You must be logged in to delete an address", {
+        variant: "warning",
+      });
+      return null;
+    }
 
+    try {
+      const response = await axios.delete(
+        `${config.endpoint}/user/addresses/${addressId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${tokenParam}`,
+          },
+        }
+      );
+
+      // response.data expected to be updated addresses array
+      setAddresses((prev) => {
+        const newAll = response.data || [];
+        // if the deleted address was selected, clear selection
+        const selected = prev.selected === addressId ? "" : prev.selected;
+        return { all: newAll, selected };
+      });
+      enqueueSnackbar("Address deleted successfully", { variant: "success" });
+      return response.data;
     } catch (e) {
-      if (e.response) {
+      if (e.response && e.response.data && e.response.data.message) {
         enqueueSnackbar(e.response.data.message, { variant: "error" });
       } else {
         enqueueSnackbar(
@@ -330,74 +290,96 @@ const Checkout = () => {
           }
         );
       }
+      return null;
     }
   };
 
-  // TODO: CRIO_TASK_MODULE_CHECKOUT - Validate request for checkout
   /**
    * Return if the request validation passed. If it fails, display appropriate warning message.
-   *
-   * Validation checks - show warning message with given text if any of these validation fails
-   *
-   *  1. Not enough balance available to checkout cart items
-   *    "You do not have enough balance in your wallet for this purchase"
-   *
-   *  2. No addresses added for user
-   *    "Please add a new address before proceeding."
-   *
-   *  3. No address selected for checkout
-   *    "Please select one shipping address to proceed."
-   *
-   * @param { Array.<CartItem> } items
-   *    Array of objects with complete data on products added to the cart
-   *
-   * @param { Addresses } addresses
-   *    Contains data on array of addresses and selected address id
-   *
-   * @returns { Boolean }
-   *    Whether validation passed or not
-   *
    */
-  const validateRequest = (items, addresses) => {
+  const validateRequest = (itemsParam, addressesParam) => {
+    // 1. Not enough balance
+    const total = getTotalCartValue(itemsParam || []);
+    const wallet = parseInt(localStorage.getItem("balance") || "0", 10);
+    if (total > wallet) {
+      enqueueSnackbar(
+        "You do not have enough balance in your wallet for this purchase",
+        { variant: "warning" }
+      );
+      return false;
+    }
+
+    // 2. No addresses added
+    if (!addressesParam || !addressesParam.all || addressesParam.all.length === 0) {
+      enqueueSnackbar("Please add a new address before proceeding.", {
+        variant: "warning",
+      });
+      return false;
+    }
+
+    // 3. No address selected
+    if (!addressesParam.selected) {
+      enqueueSnackbar("Please select one shipping address to proceed.", {
+        variant: "warning",
+      });
+      return false;
+    }
+
+    return true;
   };
 
-  // TODO: CRIO_TASK_MODULE_CHECKOUT
   /**
    * Handler function to perform checkout operation for items added to the cart for the selected address
    *
-   * @param { String } token
-   *    Login token
-   *
-   * @param { Array.<CartItem } items
-   *    Array of objects with complete data on products added to the cart
-   *
-   * @param { Addresses } addresses
-   *    Contains data on array of addresses and selected address id
-   *
-   * @returns { Boolean }
-   *    If checkout operation was successful
-   *
-   * API endpoint - "POST /cart/checkout"
-   *
-   * Example for successful response from backend:
-   * HTTP 200
-   * {
-   *  "success": true
-   * }
-   *
-   * Example for failed response from backend:
-   * HTTP 400
-   * {
-   *  "success": false,
-   *  "message": "Wallet balance not sufficient to place order"
-   * }
-   *
+   * On success:
+   *  - update localStorage balance to reflect spent amount
+   *  - show success snackbar with exact text "Order placed successfully"
+   *  - redirect to /thanks
    */
-  const performCheckout = async (token, items, addresses) => {
+  const performCheckout = async (tokenParam, itemsParam, addressesParam) => {
+    if (!tokenParam) {
+      enqueueSnackbar("You must be logged in to place an order", { variant: "warning" });
+      return false;
+    }
+
+    if (!validateRequest(itemsParam, addressesParam)) return false;
+
+    try {
+      const response = await axios.post(
+        `${config.endpoint}/cart/checkout`,
+        { addressId: addressesParam.selected },
+        {
+          headers: {
+            Authorization: `Bearer ${tokenParam}`,
+          },
+        }
+      );
+
+      if (response.data && response.data.success) {
+        // Update user's balance in localStorage (subtract total)
+        const total = getTotalCartValue(itemsParam || []);
+        const currentBalance = parseInt(localStorage.getItem("balance") || "0", 10);
+        const newBalance = currentBalance - total;
+        localStorage.setItem("balance", String(newBalance));
+
+        // Show success message (exact text required by tests)
+        enqueueSnackbar("Order placed successfully", { variant: "success" });
+
+        // Redirect to thanks page
+        history.push("/thanks");
+        return true;
+      } else {
+        const msg = response.data?.message || "Could not place order. Please try again.";
+        enqueueSnackbar(msg, { variant: "error" });
+        return false;
+      }
+    } catch (e) {
+      const msg =
+        e.response?.data?.message || "Could not place order. Please try again.";
+      enqueueSnackbar(msg, { variant: "error" });
+      return false;
+    }
   };
-
-  // TODO: CRIO_TASK_MODULE_CHECKOUT - Fetch addressses if logged in, otherwise show info message and redirect to Products page
-
 
   // Fetch products and cart data on page load
   useEffect(() => {
@@ -410,18 +392,22 @@ const Checkout = () => {
         const cartDetails = await generateCartItemsFrom(cartData, productsData);
         setItems(cartDetails);
       }
+
+      // fetch addresses if logged in
+      if (token) {
+        await getAddresses(token);
+      }
     };
     onLoadHandler();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
->>>>>>> theirs
 
   return (
     <>
       <Header />
       <Grid container>
         <Grid item xs={12} md={9}>
-          <Box className="shipping-container" minHeight="100vh">
+          <Box className="shipping-container" minHeight="100vh" p={2}>
             <Typography color="#3C3C3C" variant="h4" my="1rem">
               Shipping
             </Typography>
@@ -431,19 +417,63 @@ const Checkout = () => {
               Select the address you want to get your order delivered.
             </Typography>
             <Divider />
-            <Box>
-<<<<<<< ours
+            <Box my="1rem">
+              {addresses.all && addresses.all.length > 0 ? (
+                addresses.all.map((addr) => {
+                  const selected = addresses.selected === addr._id;
+                  return (
+                    <Box
+                      key={addr._id}
+                      className={`address-item ${selected ? "selected" : "not-selected"}`}
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      my={1}
+                      p={2}
+                    >
+                      <Box
+                        onClick={() =>
+                          setAddresses((prev) => ({ ...prev, selected: addr._id }))
+                        }
+                        sx={{ cursor: "pointer", flex: 1 }}
+                        data-testid={`address-${addr._id}`}
+                        style={{ whiteSpace: "pre-line" }}
+                      >
+                        {addr.address}
+                      </Box>
+                      <Stack direction="row" spacing={1}>
+                        <Button
+                          variant={selected ? "contained" : "outlined"}
+                          onClick={() =>
+                            setAddresses((prev) => ({ ...prev, selected: addr._id }))
+                          }
+                          data-testid={`select-address-${addr._id}`}
+                        >
+                          {selected ? "Selected" : "Select"}
+                        </Button>
+                        <Button
+                          startIcon={<Delete />}
+                          color="error"
+                          variant="text"
+                          onClick={() => deleteAddress(token, addr._id)}
+                          data-testid={`delete-address-${addr._id}`}
+                        >
+                          Delete
+                        </Button>
+                      </Stack>
+                    </Box>
+                  );
+                })
+              ) : (
+                <Typography my="1rem" data-testid="no-address">
+                  No addresses found for this account. Please add one to proceed
+                </Typography>
+              )}
             </Box>
 
-=======
-              {/* TODO: CRIO_TASK_MODULE_CHECKOUT - Display list of addresses and corresponding "Delete" buttons, if present, of which 1 can be selected */}
-               <Typography my="1rem">
-                 No addresses found for this account. Please add one to proceed
-               </Typography>
-            </Box>
-
-            {/* TODO: CRIO_TASK_MODULE_CHECKOUT - Dislay either "Add new address" button or the <AddNewAddressView> component to edit the currently selected address */}
-            <Button
+            {/* Add new address UI */}
+            {!newAddress.isAddingNewAddress ? (
+              <Button
                 color="primary"
                 variant="contained"
                 id="add-new-btn"
@@ -454,16 +484,18 @@ const Checkout = () => {
                     isAddingNewAddress: true,
                   }));
                 }}
+                data-testid="add-new-btn"
               >
                 Add new address
-            </Button>
-            <AddNewAddressView
+              </Button>
+            ) : (
+              <AddNewAddressView
                 token={token}
                 newAddress={newAddress}
                 handleNewAddress={setNewAddress}
                 addAddress={addAddress}
-            />
->>>>>>> theirs
+              />
+            )}
 
             <Typography color="#3C3C3C" variant="h4" my="1rem">
               Payment
@@ -484,6 +516,7 @@ const Checkout = () => {
             <Button
               startIcon={<CreditCard />}
               variant="contained"
+              onClick={() => performCheckout(token, items, addresses)}
             >
               PLACE ORDER
             </Button>
